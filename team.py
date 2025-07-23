@@ -26,9 +26,9 @@ MAP_FILE = 'area_map.csv'
 STRUCT_FILE = 'area_struct.csv'
 CATEGORY_FILE = 'area_category.csv'
 
-INITIAL_MAP_IMAGE = 'map.png'
-FINAL_MAP_IMAGE = 'map_final.png'
-PATH_CSV = 'home_to_cafe.csv'
+INITIAL_MAP_IMAGE = 'map.png' # 모든 area를 포함하는 초기 맵 파일명 변경
+FINAL_MAP_IMAGE = 'map_final.png' # 모든 area를 포함하는 최종 맵 파일명 변경
+PATH_CSV = 'home_to_cafe.csv' # 모든 area를 포함하는 경로 CSV 파일명 변경
 
 
 # ==============================================================================
@@ -37,7 +37,7 @@ PATH_CSV = 'home_to_cafe.csv'
 
 def analyze_and_filter_data():
     """
-    실제 CSV 파일 구조에 맞게 데이터를 병합하고 area 1에 대한 데이터를 필터링합니다.
+    실제 CSV 파일 구조에 맞게 데이터를 병합하고 모든 area 데이터를 필터링합니다.
     """
     print("--- 1단계: 데이터 분석 시작 ---")
     try:
@@ -64,35 +64,34 @@ def analyze_and_filter_data():
     # ConstructionSite가 1이면 이름을 'ConstructionSite'로 강제 설정합니다.
     df_merged.loc[df_merged['ConstructionSite'] == 1, 'name'] = 'ConstructionSite'
 
-    # 여기서 name 열의 공백을 제거합니다.
+    # name 열의 공백을 제거합니다.
     df_merged['name'] = df_merged['name'].str.strip()
 
-    # 4. 실제 구조물(category != 0)과 건설 현장만 필터링합니다.
-    final_df = df_merged[(df_merged['category'] != 0) | (df_merged['ConstructionSite'] == 1)].copy()
+    # 4. 실제 구조물(category != 0)과 건설 현장만 필터링합니다. (모든 area 포함)
+    final_df = df_merged[(df_merged['category'] != 0) | (df_merged['ConstructionSite'] == 1)].copy().reset_index(drop=True)
 
     # 5. 프로젝트의 다른 코드와 호환되도록 열 이름을 변경합니다.
     final_df.rename(columns={'x': 'loc_x', 'y': 'loc_y'}, inplace=True)
     
-    # 6. 필요한 열만 선택하고 area 1 데이터만 필터링합니다.
+    # 6. 필요한 열만 선택합니다. (이제 area 1으로 필터링하지 않습니다)
     final_df = final_df[['loc_x', 'loc_y', 'area', 'name']]
-    area1_df = final_df[final_df['area'] == 1].copy().reset_index(drop=True)
 
-    print("Area 1 데이터 필터링 완료.")
-    print(area1_df)
-
+    print("모든 Area 데이터 필터링 완료.")
+    print(final_df.head()) # 모든 area 포함된 데이터 확인
+    
     # (보너스) 구조물 종류별 요약 통계
-    print("\n--- [보너스] 구조물 종류별 요약 통계 (Area 1) ---")
-    summary = area1_df.groupby('name')[['loc_x', 'loc_y']].describe()
+    print("\n--- [보너스] 구조물 종류별 요약 통계 (전체 Area) ---")
+    summary = final_df.groupby(['area', 'name'])[['loc_x', 'loc_y']].describe()
     print(summary)
     print("-" * 30)
 
-    return area1_df
+    return final_df # 모든 area 데이터 반환
 
 # ==============================================================================
-# 🗺️ 2단계: 지도 시각화 (기존 코드와 동일)
+# 🗺️ 2단계: 지도 시각화 (모든 area를 포함하도록 수정)
 # ==============================================================================
 
-def draw_map(data_df, output_filename, title='Area 1 지도', path_coords=None):
+def draw_map(data_df, output_filename, title='전체 지도', path_coords=None): # 제목 변경
     print(f"--- 지도 시각화 시작 ({output_filename}) ---")
     if data_df is None or data_df.empty:
         print('오류: 시각화할 데이터가 없습니다.')
@@ -111,6 +110,7 @@ def draw_map(data_df, output_filename, title='Area 1 지도', path_coords=None):
     ax.set_xlabel('X 좌표', fontsize=12)
     ax.set_ylabel('Y 좌표', fontsize=12)
 
+    # 모든 area 데이터 기준으로 최대 x, y를 설정
     max_x = data_df['loc_x'].max() + 2
     max_y = data_df['loc_y'].max() + 2
     ax.set_xlim(0.5, max_x - 0.5)
@@ -120,6 +120,7 @@ def draw_map(data_df, output_filename, title='Area 1 지도', path_coords=None):
     ax.grid(True, linestyle='--', linewidth=0.5)
     ax.set_aspect('equal')
 
+    # 모든 area의 구조물을 그립니다.
     for name, style in styles.items():
         subset = data_df[data_df['name'] == name]
         if not subset.empty:
@@ -142,7 +143,7 @@ def draw_map(data_df, output_filename, title='Area 1 지도', path_coords=None):
     print("-" * 30)
 
 # ==============================================================================
-# 🚶 3단계: 최단 경로 탐색 (기존 코드와 동일)
+# 🚶 3단계: 최단 경로 탐색 (모든 area를 고려하도록 수정)
 # ==============================================================================
 
 def bfs_shortest_path(grid_size, obstacles, start, end):
@@ -165,25 +166,38 @@ def bfs_shortest_path(grid_size, obstacles, start, end):
                 visited.add(next_pos)
     return None
 
-def find_and_save_shortest_path(data_df):
+def find_and_save_shortest_path(all_data_df): # 모든 area 데이터를 받도록 변경
     print("--- 3단계: 최단 경로 탐색 시작 ---")
-    if data_df is None:
+    if all_data_df is None or all_data_df.empty:
+        print("오류: 경로 탐색을 위한 데이터가 없습니다.")
         return
 
-    start_node = data_df[data_df['name'] == 'MyHome']
-    end_node = data_df[data_df['name'] == 'BandalgomCoffee']
-    obstacles = set(tuple(x) for x in data_df[data_df['name'] == 'ConstructionSite'][['loc_x', 'loc_y']].to_numpy())
+    # 이제 area 필터링 없이 'MyHome'과 'BandalgomCoffee'를 찾습니다.
+    # 여러 개가 있을 경우 첫 번째 것을 사용합니다.
+    start_nodes = all_data_df[all_data_df['name'] == 'MyHome']
+    end_nodes = all_data_df[all_data_df['name'] == 'BandalgomCoffee']
+    
+    # 장애물은 모든 area의 ConstructionSite를 포함합니다.
+    obstacles = set(tuple(x) for x in all_data_df[all_data_df['name'] == 'ConstructionSite'][['loc_x', 'loc_y']].to_numpy())
 
-    if start_node.empty or end_node.empty:
+    if start_nodes.empty or end_nodes.empty:
         print("오류: 'MyHome' 또는 'BandalgomCoffee' 위치를 데이터에서 찾을 수 없습니다.")
-        # 디버깅을 위해 이 부분에 추가
-        print("start_node 내용:\n", start_node)
-        print("end_node 내용:\n", end_node)
+        # 디버깅을 위해 현재 데이터에 어떤 구조물이 있는지 출력
+        print("찾은 'MyHome' 노드:\n", start_nodes)
+        print("찾은 'BandalgomCoffee' 노드:\n", end_nodes)
         return
 
-    start_pos = (start_node.iloc[0]['loc_x'], start_node.iloc[0]['loc_y'])
-    end_pos = (end_node.iloc[0]['loc_x'], end_node.iloc[0]['loc_y'])
-    grid_size = (data_df['loc_x'].max() + 2, data_df['loc_y'].max() + 2)
+    # 첫 번째 'MyHome'과 'BandalgomCoffee'를 시작/종료 지점으로 사용
+    start_pos = (start_nodes.iloc[0]['loc_x'], start_nodes.iloc[0]['loc_y'])
+    end_pos = (end_nodes.iloc[0]['loc_x'], end_nodes.iloc[0]['loc_y'])
+    
+    # 그리드 크기는 모든 데이터의 최대 x, y 값을 기준으로 설정합니다.
+    grid_size = (all_data_df['loc_x'].max() + 2, all_data_df['loc_y'].max() + 2)
+
+    print(f"시작 위치 (MyHome): {start_pos}")
+    print(f"도착 위치 (BandalgomCoffee): {end_pos}")
+    print(f"건설 현장 (장애물 수): {len(obstacles)}개")
+    print(f"그리드 크기: {grid_size[0]-1}x{grid_size[1]-1}")
 
     path = bfs_shortest_path(grid_size, obstacles, start_pos, end_pos)
 
@@ -195,7 +209,8 @@ def find_and_save_shortest_path(data_df):
     path_df.to_csv(PATH_CSV, index=False)
     print(f"✔️ '{PATH_CSV}' 파일 저장 완료.")
 
-    draw_map(data_df, FINAL_MAP_IMAGE, title='Area 1 지도 및 최단 경로', path_coords=path)
+    # 경로 시각화 시에도 모든 area 데이터를 기반으로 지도에 그립니다.
+    draw_map(all_data_df, FINAL_MAP_IMAGE, title='전체 지도 및 최단 경로', path_coords=path)
 
 # ==============================================================================
 # 🚀 메인 실행 로직
@@ -203,13 +218,16 @@ def find_and_save_shortest_path(data_df):
 
 if __name__ == '__main__':
     set_korean_font()
-    area1_data = analyze_and_filter_data()
+    # analyze_and_filter_data는 이제 모든 area 데이터를 반환합니다.
+    all_struct_data = analyze_and_filter_data() 
     
-    if area1_data is not None and not area1_data.empty:
-        draw_map(area1_data, INITIAL_MAP_IMAGE)
-        find_and_save_shortest_path(area1_data)
+    if all_struct_data is not None and not all_struct_data.empty:
+        # 초기 맵은 모든 area에 대한 데이터를 사용하여 그립니다.
+        draw_map(all_struct_data, INITIAL_MAP_IMAGE, title='전체 초기 지도') 
+        # find_and_save_shortest_path는 이제 전체 데이터를 받아 그 안에서 경로를 찾습니다.
+        find_and_save_shortest_path(all_struct_data)
         print("\n🎉 모든 작업이 성공적으로 완료되었습니다!")
-    elif area1_data is not None and area1_data.empty:
-        print("\n분석 결과 Area 1에 해당하는 구조물 데이터가 없습니다.")
+    elif all_struct_data is not None and all_struct_data.empty:
+        print("\n분석 결과 구조물 데이터가 없습니다.")
     else:
         print("\n데이터 분석 단계에서 오류가 발생하여 작업을 중단합니다.")
