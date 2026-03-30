@@ -95,12 +95,19 @@ python main.py
 
 ## 📸 실행 화면
 
-*(학습자가 직접 프로그램을 실행하고 캡처한 이미지가 들어갈 자리입니다.)*
+*(직접 생성한 터미널 실행 화면 캡처본입니다.)*
 
-- **메뉴 화면**: `docs/screenshots/menu.png`
-- **퀴즈 풀기**: `docs/screenshots/play.png`
-- **퀴즈 추가**: `docs/screenshots/add_quiz.png`
-- **점수 확인**: `docs/screenshots/score.png`
+### 1. 메뉴 화면
+![메뉴 화면](docs/screenshots/menu.png)
+
+### 2. 퀴즈 풀기
+![퀴즈 풀기](docs/screenshots/play.png)
+
+### 3. 퀴즈 추가
+![퀴즈 추가](docs/screenshots/add_quiz.png)
+
+### 4. 점수 확인
+![점수 확인](docs/screenshots/score.png)
 
 ## 💡 팀원 협업 규칙
 - Issue와 PR 활용
