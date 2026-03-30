@@ -95,7 +95,13 @@ python main.py
 
 ## 📸 실행 화면
 
-스크린샷은 `docs/screenshots/` 폴더에 저장되어 있습니다.
+*(학습자가 직접 프로그램을 실행하고 캡처한 이미지가 들어갈 자리입니다.)*
+
+- **메뉴 화면**: `docs/screenshots/menu.png`
+- **퀴즈 풀기**: `docs/screenshots/play.png`
+- **퀴즈 추가**: `docs/screenshots/add_quiz.png`
+- **점수 확인**: `docs/screenshots/score.png`
+
 ## 💡 팀원 협업 규칙
 - Issue와 PR 활용
 - **Clone & Pull 테스트 완료 (과제 1-2 요구사항 충족)**
