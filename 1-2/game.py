@@ -1,5 +1,5 @@
 """
-game.py - QuizGame 클래스: 전체 게임 흐름 관리
+game.py - 게임 진행 흐름을 한눈에 쉽게 볼 수 있도록 작성한 퀴즈 게임 코드
 """
 
 import json
@@ -8,63 +8,56 @@ import random
 
 from quiz import Quiz, DEFAULT_QUIZZES
 
+# 파일 저장 위치를 설정합니다. 현재 폴더에 state.json 이름으로 저장됩니다.
 STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
 
 
 class QuizGame:
-    """퀴즈 게임 전체를 관리하는 클래스."""
-
     def __init__(self):
-        self.quizzes: list[Quiz] = []
-        self.best_score: dict = {"correct": 0, "total": 0}
+        # 파이썬 리스트와 딕셔너리로 기본 변수를 설정합니다.
+        self.quizzes = []
+        self.best_score = {"correct": 0, "total": 0}
+        
+        # 프로그램을 시작할 때 파일에서 저장된 데이터를 불러옵니다.
         self.load_state()
 
-    # ──────────────────────────────────────────
-    # 파일 저장 / 불러오기
-    # ──────────────────────────────────────────
-
-    def load_state(self) -> None:
-        """state.json에서 퀴즈 데이터와 최고 점수를 불러온다."""
+    # ==============================================================
+    # 1. 파일 저장 및 불러오기 (초보자에게는 어려울 수 있으니 그대로 사용하세요)
+    # ==============================================================
+    def load_state(self):
         if not os.path.exists(STATE_FILE):
-            # 첫 실행: 기본 데이터 사용
+            # 처음 실행해서 파일이 없으면 기본 문제를 준비합니다.
             self.quizzes = list(DEFAULT_QUIZZES)
             return
 
         try:
             with open(STATE_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            self.quizzes = [Quiz.from_dict(q) for q in data.get("quizzes", [])]
+            
+            # 저장된 딕셔너리를 다시 Quiz 클래스로 만듭니다.
+            self.quizzes = []
+            for q_data in data.get("quizzes", []):
+                self.quizzes.append(Quiz.from_dict(q_data))
+                
             self.best_score = data.get("best_score", {"correct": 0, "total": 0})
-            correct = self.best_score.get("correct", 0)
-            total = self.best_score.get("total", 0)
-            print(f"📂 저장된 데이터를 불러왔습니다. "
-                  f"(퀴즈 {len(self.quizzes)}개, 최고점수 {self._score_str(correct, total)})")
-        except (json.JSONDecodeError, KeyError, TypeError):
-            print("⚠️  저장 파일이 손상되었습니다. 기본 퀴즈 데이터로 초기화합니다.")
+            print(f"📂 저장된 데이터를 불러왔습니다. (점수: {self.best_score['correct']}/{self.best_score['total']})")
+        except Exception:
+            print("⚠️  저장 파일이 손상되어 기본 문제로 다시 시작합니다.")
             self.quizzes = list(DEFAULT_QUIZZES)
             self.best_score = {"correct": 0, "total": 0}
-        except OSError as e:
-            print(f"⚠️  파일 읽기 오류: {e}. 기본 데이터를 사용합니다.")
-            self.quizzes = list(DEFAULT_QUIZZES)
 
-    def save_state(self) -> None:
-        """현재 퀴즈 데이터와 최고 점수를 state.json에 저장한다."""
+    def save_state(self):
         data = {
-            "quizzes": [q.to_dict() for q in self.quizzes],
-            "best_score": self.best_score,
+            "quizzes": [quiz.to_dict() for quiz in self.quizzes],
+            "best_score": self.best_score
         }
-        try:
-            with open(STATE_FILE, "w", encoding="utf-8") as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-        except OSError as e:
-            print(f"⚠️  저장 오류: {e}")
+        with open(STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
 
-    # ──────────────────────────────────────────
-    # 메뉴
-    # ──────────────────────────────────────────
-
-    def show_menu(self) -> None:
-        """메인 메뉴를 출력한다."""
+    # ==============================================================
+    # 2. 기능 구현 (파이썬 기초 조건문/반복문 활용)
+    # ==============================================================
+    def show_menu(self):
         print("\n========================================")
         print("         🎯 나만의 퀴즈 게임 🎯")
         print("========================================")
@@ -75,227 +68,142 @@ class QuizGame:
         print("  5. 종료")
         print("========================================")
 
-    def get_menu_choice(self) -> int:
-        """메뉴 번호를 입력받아 반환한다. 잘못된 입력은 재요청한다."""
-        while True:
-            try:
-                raw = input("선택: ").strip()
-                if not raw:
-                    print("⚠️  입력이 비어 있습니다. 1-5 사이의 숫자를 입력하세요.")
-                    continue
-                choice = int(raw)
-                if 1 <= choice <= 5:
-                    return choice
-                print("⚠️  잘못된 입력입니다. 1-5 사이의 숫자를 입력하세요.")
-            except ValueError:
-                print("⚠️  잘못된 입력입니다. 1-5 사이의 숫자를 입력하세요.")
-
-    # ──────────────────────────────────────────
-    # 1. 퀴즈 풀기
-    # ──────────────────────────────────────────
-
-    def play_quiz(self) -> None:
-        """퀴즈를 랜덤 순서로 출제하고 결과를 저장한다."""
-        if not self.quizzes:
-            print("\n📭 등록된 퀴즈가 없습니다. 먼저 퀴즈를 추가해 주세요.")
+    def play_quiz(self):
+        if len(self.quizzes) == 0:
+            print("\n📭 등록된 퀴즈가 없습니다. 메뉴에서 '2번'을 눌러 먼저 퀴즈를 추가해 주세요.")
             return
 
-        # 문제 수 선택 (보너스: 문제 수 선택)
-        total = self._select_quiz_count()
-        if total is None:
-            return
-
-        pool = random.sample(self.quizzes, total)
+        # 모든 문제를 무작위(랜덤)로 섞습니다.
+        random.shuffle(self.quizzes)
         correct_count = 0
+        total_count = len(self.quizzes)
 
-        print(f"\n📝 퀴즈를 시작합니다! (총 {total}문제)\n")
+        print(f"\n📝 퀴즈를 시작합니다! (총 {total_count}문제)")
 
-        for idx, quiz in enumerate(pool, 1):
-            quiz.display(idx)
-            answer = self._get_answer_input()
-            if answer is None:   # Ctrl+C / EOF
-                print("\n⚠️  퀴즈가 중단되었습니다.")
-                self.save_state()
-                return
-            if quiz.check_answer(answer):
+        # for 반복문: 리스트에 있는 퀴즈를 하나씩 풉니다.
+        index = 1
+        for quiz in self.quizzes:
+            quiz.display(index)
+            
+            # 제대로 된 숫자를 입력할 때까지 무한 반복(while True) 합니다.
+            while True:
+                user_input = input("\n정답 입력 (1-4): ").strip()
+                if user_input in ["1", "2", "3", "4"]:
+                    answer_number = int(user_input)
+                    break # 정답을 맞게 입력하면 무한루프 탈출
+                else:
+                    print("⚠️  1~4 사이의 숫자만 입력해 주세요.")
+            
+            # 입력한 값이 진짜 정답인지 확인합니다. (if 조건문)
+            if quiz.check_answer(answer_number):
                 print("✅ 정답입니다!")
                 correct_count += 1
             else:
                 print(f"❌ 오답입니다. 정답은 {quiz.answer}번이에요.")
+                
+            index += 1
 
-        # 결과 출력
-        score_pct = int(correct_count / total * 100)
-        print(f"\n========================================")
-        print(f"🏆 결과: {total}문제 중 {correct_count}문제 정답! ({score_pct}점)")
+        # 결과 출력 및 최고 점수 저장 로직
+        score_percent = int(correct_count / total_count * 100)
+        print("\n========================================")
+        print(f"🏆 결과: {total_count}문제 중 {correct_count}문제 정답! ({score_percent}점)")
 
-        # 최고 점수 갱신
-        prev_correct = self.best_score.get("correct", 0)
-        prev_total = self.best_score.get("total", 0)
-        prev_pct = int(prev_correct / prev_total * 100) if prev_total else 0
-        if score_pct > prev_pct:
-            self.best_score = {"correct": correct_count, "total": total}
-            print("🎉 새로운 최고 점수입니다!")
+        # 기존 점수와 비교해서 최고 기록을 경신했는지 확인합니다.
+        prev_correct = self.best_score["correct"]
+        prev_total = self.best_score["total"]
+        if prev_total == 0 or (correct_count / total_count) > (prev_correct / prev_total):
+            self.best_score = {"correct": correct_count, "total": total_count}
+            print("🎉 새로운 최고 기록을 달성했습니다!")
         print("========================================")
 
-        self.save_state()
+        self.save_state()  # 점수를 파일에 저장합니다.
 
-    def _select_quiz_count(self) -> int | None:
-        """풀 문제 수를 선택한다. 취소 시 None 반환."""
-        max_count = len(self.quizzes)
-        print(f"\n몇 문제를 풀까요? (1~{max_count}, 기본값: {max_count})")
-        while True:
-            try:
-                raw = input(f"문제 수 [Enter = 전체]: ").strip()
-                if not raw:
-                    return max_count
-                count = int(raw)
-                if 1 <= count <= max_count:
-                    return count
-                print(f"⚠️  1~{max_count} 사이의 숫자를 입력하세요.")
-            except ValueError:
-                print("⚠️  숫자를 입력해 주세요.")
-            except (KeyboardInterrupt, EOFError):
-                return None
-
-    def _get_answer_input(self) -> int | None:
-        """정답 번호(1~4)를 입력받는다. 오류 시 None 반환."""
-        while True:
-            try:
-                raw = input("\n정답 입력 (1-4): ").strip()
-                if not raw:
-                    print("⚠️  입력이 비어 있습니다. 1~4 사이의 숫자를 입력하세요.")
-                    continue
-                ans = int(raw)
-                if 1 <= ans <= 4:
-                    return ans
-                print("⚠️  1~4 사이의 숫자를 입력하세요.")
-            except ValueError:
-                print("⚠️  숫자를 입력해 주세요.")
-            except (KeyboardInterrupt, EOFError):
-                return None
-
-    # ──────────────────────────────────────────
-    # 2. 퀴즈 추가
-    # ──────────────────────────────────────────
-
-    def add_quiz(self) -> None:
-        """새로운 퀴즈를 등록한다."""
+    def add_quiz(self):
         print("\n📌 새로운 퀴즈를 추가합니다.\n")
-        try:
-            question = self._input_required("문제를 입력하세요: ")
-            if question is None:
-                return
-
-            choices = []
-            for i in range(1, 5):
-                choice = self._input_required(f"선택지 {i}: ")
-                if choice is None:
-                    return
-                choices.append(choice)
-
-            answer = self._get_answer_index()
-            if answer is None:
-                return
-
-            new_quiz = Quiz(question=question, choices=choices, answer=answer)
-            self.quizzes.append(new_quiz)
-            self.save_state()
-            print("\n✅ 퀴즈가 추가되었습니다!")
-
-        except (KeyboardInterrupt, EOFError):
-            print("\n⚠️  퀴즈 추가가 취소되었습니다.")
-
-    def _input_required(self, prompt: str) -> str | None:
-        """공백 제거 후, 비어 있으면 재입력. Ctrl+C 시 None 반환."""
+        
+        # 1. 문제 입력 (빈 칸 입력 방지)
         while True:
-            try:
-                value = input(prompt).strip()
-                if value:
-                    return value
+            question = input("문제를 입력하세요: ").strip()
+            if question != "":
+                break
+            print("⚠️  내용을 입력해 주세요.")
+
+        # 2. 선택지 4개 입력
+        choices = []
+        for i in range(1, 5):
+            while True:
+                choice = input(f"선택지 {i}번: ").strip()
+                if choice != "":
+                    choices.append(choice)
+                    break
                 print("⚠️  내용을 입력해 주세요.")
-            except (KeyboardInterrupt, EOFError):
-                return None
 
-    def _get_answer_index(self) -> int | None:
-        """정답 번호(1~4)를 입력받는다."""
+        # 3. 정답 번호 입력 (1~4 확인)
         while True:
-            try:
-                raw = input("정답 번호 (1-4): ").strip()
-                if not raw:
-                    print("⚠️  번호를 입력해 주세요.")
-                    continue
-                ans = int(raw)
-                if 1 <= ans <= 4:
-                    return ans
-                print("⚠️  1~4 사이의 숫자를 입력하세요.")
-            except ValueError:
-                print("⚠️  숫자를 입력해 주세요.")
-            except (KeyboardInterrupt, EOFError):
-                return None
+            ans_input = input("정답 번호 (1-4): ").strip()
+            if ans_input in ["1", "2", "3", "4"]:
+                answer = int(ans_input)
+                break
+            print("⚠️  1~4 사이의 숫자만 입력해 주세요.")
 
-    # ──────────────────────────────────────────
-    # 3. 퀴즈 목록
-    # ──────────────────────────────────────────
+        # 4. 새로운 퀴즈 객체를 만들고 리스트에 저장
+        new_quiz = Quiz(question=question, choices=choices, answer=answer)
+        self.quizzes.append(new_quiz)
+        self.save_state()
+        print("\n✅ 퀴즈가 성공적으로 추가되었습니다!")
 
-    def list_quizzes(self) -> None:
-        """등록된 퀴즈 목록을 출력한다."""
-        if not self.quizzes:
+    def list_quizzes(self):
+        if len(self.quizzes) == 0:
             print("\n📭 등록된 퀴즈가 없습니다.")
             return
 
         print(f"\n📋 등록된 퀴즈 목록 (총 {len(self.quizzes)}개)\n")
         print("----------------------------------------")
-        for i, quiz in enumerate(self.quizzes, 1):
-            print(f"  [{i}] {quiz.question}")
+        index = 1
+        for quiz in self.quizzes:
+            print(f"  [{index}] {quiz.question}")
+            index += 1
         print("----------------------------------------")
 
-    # ──────────────────────────────────────────
-    # 4. 점수 확인
-    # ──────────────────────────────────────────
-
-    def show_score(self) -> None:
-        """최고 점수를 출력한다."""
-        correct = self.best_score.get("correct", 0)
-        total = self.best_score.get("total", 0)
+    def show_score(self):
+        correct = self.best_score["correct"]
+        total = self.best_score["total"]
         if total == 0:
-            print("\n🏆 아직 퀴즈를 풀지 않았습니다.")
+            print("\n🏆 아직 퀴즈를 푼 기록이 없습니다.")
         else:
-            score_str = self._score_str(correct, total)
-            print(f"\n🏆 최고 점수: {score_str} ({total}문제 중 {correct}문제 정답)")
+            score_percent = int(correct / total * 100)
+            print(f"\n🏆 역대 최고 점수: {score_percent}점 (총 {total}문제 중 {correct}문제 정답)")
 
-    # ──────────────────────────────────────────
-    # 유틸리티
-    # ──────────────────────────────────────────
-
-    @staticmethod
-    def _score_str(correct: int, total: int) -> str:
-        if total == 0:
-            return "0점"
-        return f"{int(correct / total * 100)}점"
-
-    # ──────────────────────────────────────────
-    # 메인 루프
-    # ──────────────────────────────────────────
-
-    def run(self) -> None:
-        """게임 메인 루프를 실행한다."""
-        action_map = {
-            1: self.play_quiz,
-            2: self.add_quiz,
-            3: self.list_quizzes,
-            4: self.show_score,
-        }
-
+    # ==============================================================
+    # 3. 메인 게임 루프 (게임을 반복해서 실행하는 핵심 공간입니다)
+    # ==============================================================
+    def run(self):
         while True:
             try:
+                # 1. 화면에 1번~5번 메뉴를 보여줍니다.
                 self.show_menu()
-                choice = self.get_menu_choice()
-                if choice == 5:
-                    print("\n👋 게임을 종료합니다. 데이터를 저장했습니다.")
+                
+                # 2. 사용자에게 번호를 입력받습니다.
+                menu_input = input("선택 (1~5): ").strip()
+                
+                if menu_input == "1":
+                    self.play_quiz()
+                elif menu_input == "2":
+                    self.add_quiz()
+                elif menu_input == "3":
+                    self.list_quizzes()
+                elif menu_input == "4":
+                    self.show_score()
+                elif menu_input == "5":
+                    print("\n👋 게임을 종료합니다. 안녕히 가세요!")
                     self.save_state()
-                    break
-                action_map[choice]()
+                    break # 무한 루프(while True)를 탈출하여 프로그램 종료!
+                else:
+                    # 1~5가 아닌 엉뚱한 값을 적었을 경우
+                    print("⚠️  잘못된 입력입니다. 1번부터 5번 사이의 숫자만 적어주세요.")
+            
+            # Ctrl+C 등을 눌러 강제로 비정상 종료 시 안전하게 저장하고 나가는 코드
             except (KeyboardInterrupt, EOFError):
-                print("\n\n⚠️  비정상적인 종료 신호를 감지했습니다. 데이터를 저장하고 종료합니다.")
+                print("\n\n⚠️  비정상적인 종료 신호입니다. 데이터를 저장하고 나갑니다.")
                 self.save_state()
                 break
