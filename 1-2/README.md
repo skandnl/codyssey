@@ -98,3 +98,4 @@ python main.py
 스크린샷은 `docs/screenshots/` 폴더에 저장되어 있습니다.
 ## 💡 팀원 협업 규칙
 - Issue와 PR 활용
+- **Clone & Pull 테스트 완료 (과제 1-2 요구사항 충족)**
