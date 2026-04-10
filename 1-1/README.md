@@ -455,3 +455,17 @@ VSCode에서 좌측 Source Control 패널 → GitHub에 로그인 → `skandnl/c
 | Dockerfile 커스텀 이미지 제작 및 포트 매핑 | ✅ | `nginx:latest` 기반 빌드, `-p 8080:80` 매핑, `curl -I localhost:8080` → HTTP 200 OK |
 | Docker 볼륨을 통한 데이터 영속성 | ✅ | `docker volume create my-vol` → 컨테이너 삭제 후에도 데이터 유지 확인 |
 | Git(로컬)과 GitHub(원격)의 역할 차이 | ✅ | Git = 로컬 버전 관리, GitHub = 원격 호스팅/협업 플랫폼 |
+
+###평가 답변###
+포트 충돌 진단 순서:
+1.  lsof -i :8080 (Mac 기준) 명령어로 해당 포트를 쓰는 프로세스 확인.
+2.  docker ps로 이미 실행 중인 컨테이너가 있는지 확인.
+3.  중복된 컨테이너 종료 또는 다른 포트로 매핑 변경.
+
+데이터 유실 방지: 컨테이너 삭제 시 내부 데이터가 사라지는 것을 방지하기 위해 Docker Volume 또는 Bind Mount를 사용하여 호스트 디렉토리와 동기화합니다.
+
+가장 어려웠던 지점: * 가설: "이미지만 지우면 깨끗해질 것이다."
+
+확인: docker rmi 실행 시 컨테이너 충돌 에러 발생.
+
+조치: 에러 메시지를 읽고 해당 이미지를 점유한 컨테이너 ID를 찾아 docker rm으로 먼저 제거한 뒤 이미지 삭제에 성공함.

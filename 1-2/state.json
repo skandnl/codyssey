@@ -1,0 +1,74 @@
+{
+  "quizzes": [
+    {
+      "question": "Python을 처음 만든 사람은 누구인가요?",
+      "choices": [
+        "James Gosling",
+        "Guido van Rossum",
+        "Linus Torvalds",
+        "Bjarne Stroustrup"
+      ],
+      "answer": 2,
+      "last_correct": true
+    },
+    {
+      "question": "Python에서 리스트(list)의 마지막 요소에 접근하는 올바른 인덱스는?",
+      "choices": [
+        "list[0]",
+        "list[-0]",
+        "list[-1]",
+        "list[last]"
+      ],
+      "answer": 3,
+      "last_correct": true
+    },
+    {
+      "question": "Python에서 딕셔너리(dict)의 모든 키를 가져오는 방법은?",
+      "choices": [
+        ".values()",
+        ".items()",
+        ".keys()",
+        ".all()"
+      ],
+      "answer": 3,
+      "last_correct": false
+    },
+    {
+      "question": "Python 파일을 안전하게 열고 닫기 위해 쓰는 키워드는?",
+      "choices": [
+        "try",
+        "with",
+        "open",
+        "import"
+      ],
+      "answer": 2,
+      "last_correct": false
+    },
+    {
+      "question": "Python에서 클래스의 생성자(처음 만들 때 실행되는) 함수 이름은?",
+      "choices": [
+        "__start__",
+        "__new__",
+        "__create__",
+        "__init__"
+      ],
+      "answer": 4,
+      "last_correct": false
+    }
+  ],
+  "best_score": 2,
+  "game_history": [
+    {
+      "date": "2026-04-10 11:20:44",
+      "correct": 2,
+      "total": 5,
+      "score_percent": 40
+    },
+    {
+      "date": "2026-04-10 11:24:59",
+      "correct": 2,
+      "total": 5,
+      "score_percent": 40
+    }
+  ]
+}
