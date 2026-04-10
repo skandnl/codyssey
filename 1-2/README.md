@@ -75,10 +75,7 @@ python main.py
       "answer": 1
     }
   ],
-  "best_score": {
-    "correct": 4,
-    "total": 5
-  }
+  "best_score": 4
 }
 ```
 
@@ -88,8 +85,7 @@ python main.py
 | `quizzes[].question` | str | 문제 문자열 |
 | `quizzes[].choices` | list[str] | 4개의 선택지 |
 | `quizzes[].answer` | int | 정답 번호 (1~4) |
-| `best_score.correct` | int | 최고 기록 정답 수 |
-| `best_score.total` | int | 해당 게임의 전체 문제 수 |
+| `best_score` | int | 역대 최고 정답 수 (정수) |
 
 ---
 
@@ -111,4 +107,20 @@ python main.py
 
 ## 💡 팀원 협업 규칙
 - Issue와 PR 활용
-- **Clone & Pull 테스트 완료 (과제 1-2 요구사항 충족)**
+
+---
+
+## 🔁 Clone & Pull 실습 기록
+
+GitHub 저장소를 별도 폴더에 clone하고, pull까지 정상 수행한 결과입니다.
+
+```bash
+# 다른 폴더에 clone 해보기
+git clone https://github.com/skandnl/codyssey.git ~/Desktop/cody_clone_test
+
+# pull 해보기
+cd ~/Desktop/cody_clone_test/1-2
+git pull
+```
+
+![Clone & Pull 실습 화면](docs/screenshots/clone_pull.png)
