@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Premium Portfolio</title>
+  <meta name="description" content="Responsive portfolio showcasing projects, skills, and contact form with GitHub integration and dark mode." />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Navigation -->
+  <header class="navbar" id="navbar">
+    <div class="logo">MyPortfolio</div>
+    <nav class="nav-links" id="navLinks">
+      <a href="#hero">Home</a>
+      <a href="#about">About</a>
+      <a href="#skills">Skills</a>
+      <a href="#projects">Projects</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <h1>Hi, I’m <span class="highlight">Your Name</span></h1>
+      <p>Full‑stack developer • UI/UX enthusiast • Open‑source contributor</p>
+      <a href="#contact" class="cta-btn">Get in Touch</a>
+    </div>
+    <div class="hero-bg"></div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about" id="about">
+    <h2>About Me</h2>
+    <div class="about-grid">
+      <img src="images/profile.jpg" alt="Profile picture of Your Name" class="profile-pic" />
+      <div class="about-text">
+        <p>Brief introduction about yourself, background, and interests.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills Section -->
+  <section class="skills" id="skills">
+    <h2>Skills</h2>
+    <ul class="skill-list">
+      <li>HTML5</li>
+      <li>CSS3 (Flexbox, Grid)</li>
+      <li>JavaScript (ES6+)</li>
+      <li>Git & GitHub</li>
+      <li>Responsive Design</li>
+    </ul>
+  </section>
+
+  <!-- Projects Section -->
+  <section class="projects" id="projects">
+    <h2>Projects</h2>
+    <div class="projects-container" id="projectsContainer">
+      <!-- Project cards will be injected here -->
+    </div>
+    <div class="loader" id="loader">Loading projects...</div>
+    <div class="error" id="errorMsg" hidden></div>
+    <div class="empty" id="emptyMsg" hidden>No projects to display.</div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="contact" id="contact">
+    <h2>Contact Me</h2>
+    <form id="contactForm" novalidate>
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required />
+        <span class="error-msg" id="nameError"></span>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required />
+        <span class="error-msg" id="emailError"></span>
+      </div>
+      <div class="form-group">
+        <label for="message">Message</label>
+        <textarea id="message" name="message" rows="5" required></textarea>
+        <span class="error-msg" id="messageError"></span>
+      </div>
+      <button type="submit" class="submit-btn">Send</button>
+      <div class="form-success" id="formSuccess" hidden>Thank you! Your message has been sent.</div>
+    </form>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; <span id="currentYear"></span> Your Name. All rights reserved.</p>
+    <div class="social-links">
+      <a href="#" aria-label="GitHub">GitHub</a>
+      <a href="#" aria-label="LinkedIn">LinkedIn</a>
+    </div>
+  </footer>
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-top" id="scrollTop" aria-label="Scroll to top">↑</button>
+
+  <script src="js/main.js" defer></script>
+</body>
+</html>
